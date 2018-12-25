@@ -5,10 +5,11 @@ import os
 import torch as t
 import models
 from data.dataset import DogCat
-from torch.utils.data import Dataloader
+from torch.utils.data import DataLoader
 from torchnet import meter
-from utils.visualize import Visualize
+from utils.visualize import Visualizer
 from tqdm import tqdm
+import pdb
 
 import torch
 
@@ -28,8 +29,9 @@ def write_csv(results, file_name):
 
 def train(**kwargs):
     # 根据命令行参数更新配置
+    pdb.set_trace()
     opt.parse(kwargs)
-    vis = Visualize(opt.env)
+    vis = Visualizer(opt.env)
 
     # step1: configure model
     model = getattr(models, opt.model)()
@@ -38,20 +40,21 @@ def train(**kwargs):
 
     device = torch.device("cuda:{}".format(current_GPU) if torch.cuda.is_available() and opt.use_gpu else "cpu")
     model.to(device)
+    pdb.set_trace()
 
     # step2: data
     # 通过 Dataloader加载数据，train参数控制， 训练|验证
     train_data = DogCat(opt.train_data_root, train=True)
     val_data = DogCat(opt.train_data_root, train=False)
 
-    train_dataloader = Dataloader(
+    train_dataloader = DataLoader(
         train_data,
         opt.batch_size,
         shuffle=True,
         num_workers=opt.num_workers
     )
 
-    val_dataloader = Dataloader(
+    val_dataloader = DataLoader(
         val_data,
         opt.batch_size,
         shuffle=False,
@@ -161,7 +164,7 @@ def train(**kwargs):
         return confusion_matrix, accuracy
 
     def test(**kwargs):
-    	'''
+        '''
         测试时，计算每个样本属于狗的概率，将结果保存成csv文件\n
         同验证代码大致相同，但是需要：加载模型和数据
         '''
@@ -181,7 +184,7 @@ def train(**kwargs):
 
         # data
         test_data = DogCat(opt.test_data_root, train=False, test=True)
-        test_dataloader = Dataloader(
+        test_dataloader = DataLoader(
             test_data,
             batch_size=opt.batch_size,
             shuffle=False,
