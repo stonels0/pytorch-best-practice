@@ -68,6 +68,9 @@ def train(**kwargs):
                             )
 
     # step4: meters 统计指标： 平滑处理之后的损失，还有混淆矩阵
+    # 工具：meter，提供了一些轻量级的工具，用于帮助用户快速统计训练过程中的一些指标
+    # meter.AverageValueMeter(均值、标准差计算)：能够计算所有数的平均值和标准差，这里用来统计一个 epoch中损失的平均值
+    # meter.ConfusionMeter（混淆矩阵）:用来统计分类问题中的分类情况，是一个比 准确率更详细的 统计指标 (可理解为：真值图)
     loss_meter = meter.AverageValueMeter()
     confusion_matrix = meter.ConfusionMeter(2)
     previous_loss = 1e100
@@ -91,10 +94,11 @@ def train(**kwargs):
 
             # meters update and visualize
             # loss_meter.aded(loss.data[0])
-            loss_meter.add(loss.item())
+            loss_meter.add(loss.item())    # 记录每个batch_size的损失 以计算平均损失
             # confusion_matrix.add(score.data, target.data)
-            confusion_matrix.add(score.detach(), target.detach())
+            confusion_matrix.add(score.detach(), target.detach())   # 添加（模型输出，实际标注）
 
+            # 每 print_frep 个batch_size 打印一次损失（可视化）
             if ii % opt.print_frep == opt.print_frep-1:
                 vis.plot('loss', loss_meter.value()[0])
 
@@ -124,14 +128,17 @@ def train(**kwargs):
 
     def val(model, dataloader):
         '''
-        计算模型在验证集上的准确率等信息
+        计算模型在验证集上的准确率等信息\n
+        返回值：（混淆矩阵，准确率）
         '''
+        # 将模型设为验证模式
         model.eval()
         confusion_matrix = meter.ConfusionMeter(2)
 
         for ii, data in enumerate(dataloader):
             input, lable = data
 
+            # val_input = Variable(input, volatile=True)
             with t.no_grad():
                 val_input = input
                 val_label = label.type(t.LongTensor)
@@ -142,10 +149,11 @@ def train(**kwargs):
 
             score = model(val_input)
             # confusion_matrix.add(score.data.squeeze(), label.type(t.LongTensor))
-            confusion_matrix.add(  \
-                score.detach().squeeze(),  \
+            confusion_matrix.add(\
+                score.detach().squeeze(),\
                 lable.type(t.LongTensor))
-
+        # 验证完成后，将模型设置为训练模式
+        # 因为会影响 BatchNorm 和 Dropout等层的运行模式
         model.train()
         cm_value = confusion_matrix.value()
         accuracy = 100. * (cm_value[0][0] + cm_value[1][1]) / (cm_value.sum())
@@ -153,13 +161,17 @@ def train(**kwargs):
         return confusion_matrix, accuracy
 
     def test(**kwargs):
+    	'''
+        测试时，计算每个样本属于狗的概率，将结果保存成csv文件\n
+        同验证代码大致相同，但是需要：加载模型和数据
+        '''
         opt.parse(kwargs)
 
         import ipdb
         ipdb.set_trace()
 
         # configure model
-        model = getattr(models, opt.model)().eval()
+        model = getattr(models, opt.model)().eval()    # 将模型设为 验证模式
 
         if opt.load_model_path:
             model.load(opt.load_model_path)
