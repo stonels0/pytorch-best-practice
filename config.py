@@ -6,8 +6,8 @@ class DefaultConfig(object):
     env = 'default'     # visdom 环境
     model = 'ResNet34'  # 使用的模型，名字必须与 models/__init__.py中的名字一致
 
-    train_data_root = './data/train'    # 训练集存放路径
-    test_data_root = './data/test1'     # 测试集存放路径
+    train_data_root = '../../0_data/train'    # 训练集存放路径
+    test_data_root = '../../0_data/test1'     # 测试集存放路径
     load_model_path = None        # 'checkpoints/model.pth' # 加载预训练模型的路径，为None代表不加载
 
     batch_size = 32     # batch_size
