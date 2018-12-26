@@ -78,7 +78,7 @@ class DogCat(data.Dataset):
             label = int(self.imgs[index].split('.')[-2].split('/')[-1])
         else:
             label = 1 if 'dog' in img_path.split('/')[-1] else 0
-            data = Image.open(img_path)
+        data = Image.open(img_path)
         data = self.transforms(data)
 
         return data, label
