@@ -23,7 +23,7 @@ def write_csv(results, file_name):
     import csv
     with open(file_name, 'w') as f:
         writer = csv.writer(f)
-        writer.writerow(['id','label'])
+        writer.writerow(['id', 'label'])
         writer.writerows(results)
 
 
@@ -224,5 +224,6 @@ def train(**kwargs):
         print(source)
 
     if __name__ == '__main__':
+        pdb.set_trace()
         import fire
         fire.Fire()
